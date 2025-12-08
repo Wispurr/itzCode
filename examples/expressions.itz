@@ -1,9 +1,31 @@
-# math_test.itz
-# 測試 算術、IF、Loop
+# expression.itz: testing for expr
 
 ECHO "--- 1. Variable & Math Test ---"
 DEF a = 10
 DEF b = 20
-DEF c = a + b * 2
+
+# Add
+DEF c = a + b
 ECHO "a = `a`, b = `b`"
-ECHO "c (should be 50) = `c`"
+ECHO "c = `c` (should be 30)"
+
+# Minus
+c = a - b
+ECHO "c = `c` (should be -10)"
+
+# Multiple
+c = a * b
+ECHO "c = `c` (should be 200)"
+
+# Division
+c = a / b
+# 注意：若 a, b 變成整數，這裡會變成整數除法 (0)，若要小數需轉型
+ECHO "c = `c` (integer div: 0, float div: 0.5)"
+
+# Module
+c = a % b
+ECHO "c = `c` (should be 10)"
+
+# Clearly Divide
+c = a // b
+ECHO "c = `c` (should be 0)"

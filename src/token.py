@@ -9,44 +9,50 @@ class TokenType(Enum):
     STRING = 'STRING'
     COMMENT = 'COMMENT'
     
-    # 關鍵字
-    ECHO = 'ECHO'
-    DEF = 'DEF'
-    IF = 'IF'
-    THEN = 'THEN'
-    ELSE = 'ELSE'
-    ENDIF = 'ENDIF'
-    WHILE = 'WHILE'
-    REPEAT = 'REPEAT'
-    ENDWHILE = 'ENDWHILE'
-    FOR = 'FOR'
-    TO = 'TO'
-    NEXT = 'NEXT'
-    STEP = 'STEP'
-    RAND = 'RAND'
+    # Keywords
+    ECHO = 'ECHO'        # Print to console
+    DEF = 'DEF'          # Define a variable
+    INPUT = 'INPUT'      # Input from user
+    
+    IF = 'IF'            # Conditional statement
+    THEN = 'THEN'        # Part of IF statement
+    ELSE = 'ELSE'        # Part of IF statement
+    ENDIF = 'ENDIF'      # End of IF statement
+    
+    WHILE = 'WHILE'      # Start of a while loop
+    REPEAT = 'REPEAT'    # Start of a loop
+    ENDWHILE = 'ENDWHILE'# End of a loop
+    
+    FOR = 'FOR'          # Start of a for loop
+    TO = 'TO'            # Part of FOR loop
+    NEXT = 'NEXT'        # End of FOR loop
+    STEP = 'STEP'        # Step in FOR loop
+    
+    RAND = 'RAND'        # Random number generation
 
-    # 符號
+    # Symbols
     LBRACKET = 'LBRACKET' # [
     RBRACKET = 'RBRACKET' # ]
     LPAREN = 'LPAREN'     # (
     RPAREN = 'RPAREN'     # )
     COMMA = 'COMMA'       # ,
 
-    # 運算
-    EQ = 'EQ' 
-    PLUS = 'PLUS'
-    MINUS = 'MINUS'
-    ASTERISK = 'ASTERISK'
-    SLASH = 'SLASH'
-    MOD = 'MOD'
+    # Expression Operators
+    EQ = 'EQ'                       # =
+    PLUS = 'PLUS'                   # +
+    MINUS = 'MINUS'                 # -
+    ASTERISK = 'ASTERISK'           # *  
+    SLASH = 'SLASH'                 # /
+    DOUBLESLASH = 'DOUBLESLASH'     # //
+    MOD = 'MOD'                     # %  
     
-    # 比較
-    EQEQ = 'EQEQ'
-    NOTEQ = 'NOTEQ'
-    LT = 'LT'
-    LTE = 'LTE'
-    GT = 'GT'
-    GTE = 'GTE'
+    # Comparison Operators
+    EQEQ = 'EQEQ'         # ==
+    NOTEQ = 'NOTEQ'       # !=
+    LT = 'LT'             # <
+    LTE = 'LTE'           # <=
+    GT = 'GT'             # >
+    GTE = 'GTE'           # >=
     
 class Token:
     def __init__(self, token_text, token_kind):

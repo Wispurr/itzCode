@@ -28,11 +28,8 @@ class Lexer:
         while self.curChar in [' ', '\t', '\r']:
             self.nextChar()
 
-    # --- 移除原本的 skipComment，改由 getToken 直接處理 ---
-
     def getToken(self):
         self.skipWhitespace()
-        # 注意：這裡不能再呼叫 skipComment() 了，因為我們要保留它
         
         token = None
 
@@ -43,30 +40,17 @@ class Lexer:
         elif self.curChar == '\0':
             token = Token('', TokenType.EOF)
 
-        # --- 新增：處理註解 ---
+        # --- 1. 處理註解 (只支援 #) ---
         elif self.curChar == '#':
-            # itz 語法: # comment -> C 語法: // comment
             self.nextChar() # 跳過 #
             startPos = self.curPos
-            
-            # 讀取直到換行
             while self.curChar != '\n' and self.curChar != '\0':
                 self.nextChar()
-            
             text = self.source[startPos : self.curPos]
-            # 強制轉換為 C 的 // 格式
+            # 轉成 C 語言註解格式
             token = Token(f"//{text}", TokenType.COMMENT)
 
-        elif self.curChar == '/' and self.peek() == '/':
-            # itz 語法: // comment -> C 語法: // comment (直接保留)
-            startPos = self.curPos
-            while self.curChar != '\n' and self.curChar != '\0':
-                self.nextChar()
-            
-            text = self.source[startPos : self.curPos]
-            token = Token(text, TokenType.COMMENT)
-
-        # --- 以下維持原樣 ---
+        # --- 2. 處理字串 ---
         elif self.curChar == '"':
             self.nextChar()
             startPos = self.curPos
@@ -77,6 +61,7 @@ class Lexer:
             token = Token(tokenText, TokenType.STRING)
             self.nextChar()
 
+        # --- 3. 處理變數 (反引號) ---
         elif self.curChar == '`':
             self.nextChar()
             startPos = self.curPos
@@ -86,6 +71,7 @@ class Lexer:
             token = Token(tokenText, TokenType.IDENTIFIER)
             self.nextChar()
 
+        # --- 4. 處理數字 ---
         elif self.curChar.isdigit():
             startPos = self.curPos
             while self.peek().isdigit():
@@ -98,6 +84,7 @@ class Lexer:
             token = Token(tokenText, TokenType.NUMBER)
             self.nextChar()
 
+        # --- 5. 處理關鍵字與識別字 ---
         elif self.curChar.isalpha():
             startPos = self.curPos
             while self.peek().isalnum() or self.peek() == '_':
@@ -111,6 +98,18 @@ class Lexer:
                 token = Token(tokenText, keyword)
             self.nextChar()
 
+        # --- 6. 處理運算符號 (包含 // 與 /) ---
+        elif self.curChar == '/':
+            if self.peek() == '/':
+                # 這是運算符 // (整數除法)，不再是註解！
+                self.nextChar()
+                self.nextChar()
+                token = Token('//', TokenType.DOUBLESLASH)
+            else:
+                # 這是運算符 /
+                token = Token('/', TokenType.SLASH)
+                self.nextChar()
+                
         elif self.curChar == '+':
             token = Token(self.curChar, TokenType.PLUS)
             self.nextChar()
@@ -120,13 +119,11 @@ class Lexer:
         elif self.curChar == '*':
             token = Token(self.curChar, TokenType.ASTERISK)
             self.nextChar()
-        elif self.curChar == '/':
-            token = Token(self.curChar, TokenType.SLASH)
-            self.nextChar()
         elif self.curChar == '%':
             token = Token(self.curChar, TokenType.MOD)
             self.nextChar()
-            
+
+        # --- 7. 其他符號 ---
         elif self.curChar == '[':
             token = Token('[', TokenType.LBRACKET)
             self.nextChar()

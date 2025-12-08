@@ -1,4 +1,3 @@
 # 這是一個 itz 風格的註解
-// 這是 C 風格的註解
 DEF a = 10
 ECHO "Hello"

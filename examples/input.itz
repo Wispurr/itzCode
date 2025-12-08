@@ -1,0 +1,19 @@
+# input.itz: testing user input
+
+# 1. Input a String
+DEF name = "default"
+ECHO "Please enter your name:"
+INPUT name
+ECHO "Hello, `name`!"
+
+# 2. Input an Integer
+DEF age = 0
+ECHO "Enter your age:"
+INPUT age
+ECHO "You are `age` years old."
+
+# 3. Input a Float
+DEF score = 0.0
+ECHO "Enter your score (e.g. 95.5):"
+INPUT score
+ECHO "Your score is `score`."

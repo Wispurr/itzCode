@@ -61,27 +61,43 @@ A temperorary name for 1141 YZU CS321B Final Proj.
 -   [x] Define variables
 -   [x] Basic arithmetic
 -   [x] Condition statements
+
     -   [x] if
     -   [x] else
     -   [x] then
+
 -   [x] Loop statements
+
     -   [x] for
     -   [x] while
+
 -   [x] Print
 -   [x] Comments
 -   [x] Simple Algorithms
+
     -   [x] max/min
     -   [x] max_elements/min_elements
     -   [x] sort
+
+-   [x] Input
 -   [ ] Functions
+
     -   [ ] functions
     -   [ ] struct
     -   [ ] class
+
 -   [ ] STL Containers
+
     -   [ ] vectors
     -   [ ] stack
     -   [ ] queue
     -   [ ] link-list
+
+-   [ ] File R/W
+
+    -   [ ] Read File
+    -   [ ] Write File
+    -   [ ] Append File
 
 ## FAQ:
 
