@@ -1,0 +1,7 @@
+ECHO "--- 2. IF/ELSE Test ---"
+DEF c = 50
+IF c > 40 THEN
+    ECHO "Yes! c is greater than 40"
+ELSE
+    ECHO "No! c is small"
+ENDIF

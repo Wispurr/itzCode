@@ -1,0 +1,6 @@
+# hello-world.itz: Its a sample code for simple printout test.
+
+// print a simple sample sentence.
+
+DEF `itzCode` = "itz Code"
+ECHO "Hello World! `itzCode`.\n"

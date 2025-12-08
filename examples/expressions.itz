@@ -1,0 +1,9 @@
+# math_test.itz
+# 測試 算術、IF、Loop
+
+ECHO "--- 1. Variable & Math Test ---"
+DEF a = 10
+DEF b = 20
+DEF c = a + b * 2
+ECHO "a = `a`, b = `b`"
+ECHO "c (should be 50) = `c`"

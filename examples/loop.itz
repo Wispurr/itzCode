@@ -1,0 +1,11 @@
+ECHO "--- 3. WHILE Loop Test ---"
+DEF count = 0
+WHILE count < 3 REPEAT
+    ECHO "Loop count: `count`"
+    count = count + 1
+ENDWHILE
+
+ECHO "--- 4. FOR Loop Test ---"
+FOR i = 1 TO 3
+    ECHO "For Loop i: `i`"
+NEXT

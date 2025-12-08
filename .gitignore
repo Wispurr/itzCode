@@ -1,0 +1,10 @@
+#virtual environments
+.venv/
+
+# pycache
+src/__pycache__/
+__pycache__/
+
+# results
+results/
+output.*

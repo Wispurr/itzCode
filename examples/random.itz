@@ -1,0 +1,30 @@
+# random.itz: generating random numbers
+
+ECHO "=== Random Number Generator Test ==="
+
+# 1. Generate a raw random number
+DEF r1 = RAND
+ECHO "Raw random number: `r1`"
+
+# 2. Generate random number in range 0-9
+# Using the modulo operator we just added
+DEF limit = 10
+DEF r2 = RAND % limit
+ECHO "Random (0-9): `r2`"
+
+# 3. Simulate a Dice Roll (1-6)
+# Formula: (RAND % 6) + 1
+DEF dice = (RAND % 6) + 1
+ECHO "Dice Roll: `dice`"
+
+# 4. Fill an array with random numbers
+DEF arr = [0, 0, 0, 0, 0]
+DEF i = 0
+DEF val = 0
+
+ECHO "--- Generating 5 random numbers (0-99) ---"
+FOR i = 0 TO 4
+    val = RAND % 100
+    arr[i] = val
+    ECHO "arr[`i`] = `val`"
+NEXT

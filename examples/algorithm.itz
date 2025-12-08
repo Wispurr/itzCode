@@ -1,0 +1,76 @@
+# algorithm.itz: implement some algo logics with Array support
+
+ECHO "=== 1. GetMax / GetMin (Basic Logic) ==="
+# allocate both long long integer and double (all handled as double in C)
+DEF valA = 100
+DEF valB = 3.14159
+DEF maxRes = 0
+DEF minRes = 0
+
+# getMax Logic
+IF valA > valB THEN
+    maxRes = valA
+    minRes = valB
+ELSE
+    maxRes = valB
+    minRes = valA
+ENDIF
+ECHO "Values: `valA`, `valB`"
+ECHO "Max: `maxRes`"
+ECHO "Min: `minRes`"
+
+
+ECHO "=== 2. Arrays: Sort & Search ==="
+# Define an array (Allocating numbers)
+DEF arr = [50, 12, 9, 3, 99]
+DEF size = 5
+
+ECHO "Original Array (index 0-4):"
+DEF k = 0
+FOR k = 0 TO 4
+    DEF val = arr[k]
+    ECHO "arr[`k`] = `val`"
+NEXT
+
+# --- getMaxInArr & getMinInArr Logic ---
+DEF currentMax = arr[0]
+DEF currentMin = arr[0]
+DEF i = 1
+
+FOR i = 1 TO 4
+    IF arr[i] > currentMax THEN
+        currentMax = arr[i]
+    ENDIF
+    IF arr[i] < currentMin THEN
+        currentMin = arr[i]
+    ENDIF
+NEXT
+
+ECHO "Max in Array: `currentMax`"
+ECHO "Min in Array: `currentMin`"
+
+
+ECHO "=== 3. Bubble Sort Logic ==="
+# sort: implement a sorting logic in an array
+DEF j = 0
+DEF temp = 0
+
+# Bubble Sort Implementation
+FOR i = 0 TO 4
+    FOR j = 0 TO 3
+        # If arr[j] > arr[j+1], swap them
+        # Note: arr[j+1] parser support: we handle expressions in brackets!
+        IF arr[j] > arr[j+1] THEN
+            temp = arr[j]
+            arr[j] = arr[j+1]
+            arr[j+1] = temp
+        ENDIF
+    NEXT
+NEXT
+
+ECHO "Sorted Array:"
+DEF val = 0
+FOR k = 0 TO 4
+    val = arr[k]
+    ECHO "arr[`k`] = `val`"
+NEXT
