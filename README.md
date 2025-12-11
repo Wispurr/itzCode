@@ -47,7 +47,7 @@ A temperorary name for 1141 YZU CS321B Final Proj.
     1-1. Windows
 
     ```powershell
-    Get-ChildItem .\results\*.cpp | ForEach-Object { gcc $_.FullName -o ("results\" + $_.BaseName + ".exe") }
+    Get-ChildItem .\results\*.cpp | ForEach-Object { g++ -std=c++20 $_.FullName -o ("results\" + $_.BaseName + ".exe") }
     ```
 
     1-2. Linux / Mac
@@ -82,11 +82,11 @@ A temperorary name for 1141 YZU CS321B Final Proj.
 -   [x] Input
 -   [ ] Functions
 
-    -   [ ] functions
+    -   [x] functions
     -   [ ] struct
     -   [ ] class
 
--   [ ] STL Containers
+-   [ ] STL Container
 
     -   [ ] vectors
     -   [ ] stack

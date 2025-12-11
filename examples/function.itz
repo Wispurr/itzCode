@@ -1,0 +1,20 @@
+# function.itz: function testing
+
+# Recursive Fibonacci
+FUNC fib n
+    IF n = 1 THEN
+        RETURN 1
+    ELSE IF n = 2 THEN
+        RETURN 1
+    ELSE
+        RETURN fib(n-1) + fib(n-2)
+    ENDIF
+ENDFUNC
+
+ECHO "--- Fibonacci Recursive Test ---"
+DEF inputVal = 0
+ECHO "Enter a number to calculate Fibonacci:"
+INPUT inputVal
+
+DEF result = fib(inputVal)
+ECHO "Fib(`inputVal`) = `result`"

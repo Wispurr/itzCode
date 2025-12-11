@@ -9,7 +9,6 @@ class Parser:
         self.emitter = emitter
         self.curToken = None
         self.peekToken = None
-        # 注意：我們不再需要 self.symbols 了！C++ auto 會幫我們處理一切
         self.nextToken()
         self.nextToken()
 
@@ -26,61 +25,86 @@ class Parser:
         self.peekToken = self.lexer.getToken()
 
     def program(self):
+        # 1. 寫入 Headers
+        self.emitter.headerLine("#include <iostream>")
+        self.emitter.headerLine("#include <string>")
+        self.emitter.headerLine("#include <vector>")
+        self.emitter.headerLine("#include <cstdlib>")
+        self.emitter.headerLine("#include <ctime>")
+        self.emitter.headerLine("#include <cmath>")
+        self.emitter.headerLine("using namespace std;")
         
-        self.emitter.headerLine("#include <bits/stdc++.h>")
-        
-        self.emitter.headerLine("using namespace std;") # 方便使用 cout/cin
-        # self.emitter.headerLine("#define fastio ios::sync_with_stdio(0), cin.tie(0), cout.tie(0)") # 加速器
-        self.emitter.headerLine("#define endl '\\n'") # endl to '\n'
-        
-        self.emitter.headerLine("int main(void){")
-        # self.emitter.headerLine("    fastio;")
-        self.emitter.headerLine("    srand(time(NULL));")
-        
+        # 2. 預寫 Main 的開頭到緩衝區
+        # 注意：這裡我們手動操作 emitter，因為 main 的內容要在最後才組合
+        self.emitter.main += "int main(void){\n"
+        self.emitter.main += "    srand(time(NULL));\n"
+
         while self.checkToken(TokenType.NEWLINE):
             self.nextToken()
 
         while not self.checkToken(TokenType.EOF):
-            self.statement()
+            # [關鍵邏輯] 判斷是函式定義還是普通語句
+            if self.checkToken(TokenType.FUNC):
+                self.emitter.setCaptureMode("functions") # 切換到函式緩衝區
+                self.func_def()
+                self.emitter.setCaptureMode("main")      # 切換回主程式
+            else:
+                self.statement()
 
-        self.emitter.emitLine("    return 0;")
+        self.emitter.main += "    return 0;\n"
+        self.emitter.main += "}\n"
+
+    # [新增] 函式定義處理
+    def func_def(self):
+        self.match(TokenType.FUNC)
+        func_name = self.curToken.text
+        self.match(TokenType.IDENTIFIER)
+        
+        # 解析參數: FUNC fib n -> auto fib(auto n)
+        params = []
+        while not self.checkToken(TokenType.NEWLINE):
+            if self.checkToken(TokenType.IDENTIFIER):
+                params.append(f"auto {self.curToken.text}")
+                self.nextToken()
+            else:
+                break
+        
+        params_str = ", ".join(params)
+        # C++14 支援 auto 回傳型態推導 (Recursive auto 需要 C++14 以上)
+        self.emitter.emitLine(f"auto {func_name}({params_str}) {{")
+        
+        self.nl()
+        
+        while not self.checkToken(TokenType.ENDFUNC):
+            self.statement()
+        
+        self.match(TokenType.ENDFUNC)
         self.emitter.emitLine("}")
+        self.nl()
 
     def statement(self):
-        # 0. 註解
         if self.checkToken(TokenType.COMMENT):
             self.emitter.emitLine("    " + self.curToken.text)
             self.nextToken()
 
-        # 1. ECHO (升級版: 使用 cout)
         elif self.checkToken(TokenType.ECHO):
             self.match(TokenType.ECHO)
             if self.checkToken(TokenType.STRING):
                 text = self.curToken.text
-                
-                # 使用 Regex 依據反引號 ` 切割字串
-                # 範例: "Age: `age`, Score: `score`" -> ['Age: ', 'age', ', Score: ', 'score', '']
                 parts = re.split(r'`(.*?)`', text)
-                
                 self.emitter.emit("    cout")
                 for i, part in enumerate(parts):
                     if i % 2 == 0:
-                        # 偶數部分是普通字串 (例如 "Age: ")
-                        if part: # 如果不是空字串
-                            self.emitter.emit(f' << "{part}"')
+                        if part: self.emitter.emit(f' << "{part}"')
                     else:
-                        # 奇數部分是變數 (例如 age)
                         self.emitter.emit(f" << {part}")
-                
                 self.emitter.emitLine(" << endl;")
                 self.match(TokenType.STRING)
             else:
-                # ECHO 運算式
                 self.emitter.emit("    cout << (")
                 self.expression()
                 self.emitter.emitLine(") << endl;")
 
-        # 2. DEF (升級版: 使用 auto)
         elif self.checkToken(TokenType.DEF):
             self.match(TokenType.DEF)
             name = self.curToken.text
@@ -90,11 +114,8 @@ class Parser:
             if self.checkToken(TokenType.STRING):
                 val = self.curToken.text
                 self.match(TokenType.STRING)
-                # 字串改用 std::string，比 char* 更安全且好用
                 self.emitter.emitLine(f'    string {name} = "{val}";')
-            
             elif self.checkToken(TokenType.LBRACKET):
-                # 陣列還是維持 double 以支援運算，或者你可以用 auto 但 C++ 陣列初始化語法較嚴格
                 self.match(TokenType.LBRACKET)
                 self.emitter.emit(f"    double {name}[] = {{")
                 self.expression()
@@ -104,41 +125,70 @@ class Parser:
                     self.expression()
                 self.match(TokenType.RBRACKET)
                 self.emitter.emitLine("};")
-            
             else:
-                # [神技] 直接用 auto，讓 C++ 決定是 int 還是 double
                 self.emitter.emit(f"    auto {name} = ")
                 self.expression()
                 self.emitter.emitLine(";")
 
-        # 3. INPUT (升級版: 使用 cin)
+        elif self.checkToken(TokenType.RETURN):
+            self.match(TokenType.RETURN)
+            self.emitter.emit("    return ")
+            self.expression()
+            self.emitter.emitLine(";")
+
         elif self.checkToken(TokenType.INPUT):
             self.match(TokenType.INPUT)
             name = self.curToken.text
             self.match(TokenType.IDENTIFIER)
-            # cin 自動識別型別，不需要 %d 或 %s
             self.emitter.emitLine(f"    cin >> {name};")
 
-        # 4. IF
         elif self.checkToken(TokenType.IF):
             self.match(TokenType.IF)
             self.emitter.emit("    if(")
             self.comparison()
-            self.match(TokenType.THEN)
+            
+            # 支援 Optional THEN (為了你的 function.itz 語法)
+            if self.checkToken(TokenType.THEN):
+                self.match(TokenType.THEN)
+            
             self.nl()
             self.emitter.emitLine("){")
+            
             while not self.checkToken(TokenType.ENDIF) and not self.checkToken(TokenType.ELSE):
                 self.statement()
+            
+            # 處理 ELSE 或 ELSE IF
             if self.checkToken(TokenType.ELSE):
                 self.match(TokenType.ELSE)
-                self.nl()
-                self.emitter.emitLine("    } else {")
-                while not self.checkToken(TokenType.ENDIF):
-                    self.statement()
+                
+                # 檢查是否為 ELSE IF
+                if self.checkToken(TokenType.IF):
+                    self.match(TokenType.IF)
+                    self.emitter.emit("    } else if (")
+                    self.comparison()
+                    if self.checkToken(TokenType.THEN):
+                        self.match(TokenType.THEN)
+                    self.nl()
+                    self.emitter.emitLine(") {")
+                    # 遞迴呼叫 statement 直到 ENDIF
+                    while not self.checkToken(TokenType.ENDIF) and not self.checkToken(TokenType.ELSE):
+                        self.statement()
+                    # 若還有 ELSE (針對 ELSE IF 後面的 ELSE)
+                    if self.checkToken(TokenType.ELSE):
+                        self.match(TokenType.ELSE)
+                        self.nl()
+                        self.emitter.emitLine("    } else {")
+                        while not self.checkToken(TokenType.ENDIF):
+                            self.statement()
+                else:
+                    self.nl()
+                    self.emitter.emitLine("    } else {")
+                    while not self.checkToken(TokenType.ENDIF):
+                        self.statement()
+            
             self.match(TokenType.ENDIF)
             self.emitter.emitLine("    }")
 
-        # 5. WHILE
         elif self.checkToken(TokenType.WHILE):
             self.match(TokenType.WHILE)
             self.emitter.emit("    while(")
@@ -151,13 +201,11 @@ class Parser:
             self.match(TokenType.ENDWHILE)
             self.emitter.emitLine("    }")
 
-        # 6. FOR
         elif self.checkToken(TokenType.FOR):
             self.match(TokenType.FOR)
             loop_var = self.curToken.text
             self.match(TokenType.IDENTIFIER)
             self.match(TokenType.EQ)
-            # 這裡也可以用 auto
             self.emitter.emit(f"    for(auto {loop_var} = ")
             self.expression()
             self.emitter.emit(f"; {loop_var} <= ")
@@ -170,24 +218,43 @@ class Parser:
             self.match(TokenType.NEXT)
             self.emitter.emitLine("    }")
 
-        # 7. 賦值
         elif self.checkToken(TokenType.IDENTIFIER):
             name = self.curToken.text
             self.match(TokenType.IDENTIFIER)
             
-            if self.checkToken(TokenType.LBRACKET):
+            # 這裡要注意：如果是函式呼叫單獨一行 func(x)，會被這裡捕獲
+            # 判斷是賦值 (=) 還是函式呼叫 (()
+            if self.checkToken(TokenType.EQ):
+                self.match(TokenType.EQ)
+                self.emitter.emit(f"    {name} = ")
+                self.expression()
+                self.emitter.emitLine(";")
+            elif self.checkToken(TokenType.LBRACKET):
                 self.match(TokenType.LBRACKET)
                 self.emitter.emit(f"    {name}[(int)(")
                 self.expression()
                 self.emitter.emit(")]")
                 self.match(TokenType.RBRACKET)
+                self.match(TokenType.EQ)
+                self.emitter.emit(" = ")
+                self.expression()
+                self.emitter.emitLine(";")
+            elif self.checkToken(TokenType.LPAREN):
+                # 獨立的函式呼叫 fib(n)
+                self.match(TokenType.LPAREN)
+                self.emitter.emit(f"    {name}(")
+                if not self.checkToken(TokenType.RPAREN):
+                    self.expression()
+                    while self.checkToken(TokenType.COMMA):
+                        self.emitter.emit(", ")
+                        self.match(TokenType.COMMA)
+                        self.expression()
+                self.match(TokenType.RPAREN)
+                self.emitter.emitLine(");")
             else:
-                self.emitter.emit(f"    {name}")
-
-            self.match(TokenType.EQ)
-            self.emitter.emit(" = ")
-            self.expression()
-            self.emitter.emitLine(";")
+                 sys.exit(f"[Error] Unexpected identifier usage: {name}")
+        else:
+            sys.exit(f"[Parsing Error] Unexpected token at start of statement: {self.curToken.kind} ({self.curToken.text})")
 
         self.nl()
 
@@ -198,14 +265,20 @@ class Parser:
     def comparison(self):
         self.expression()
         if self.isComparisonOperator():
-            self.emitter.emit(self.curToken.text)
-            self.nextToken()
+            # [特殊處理] 如果是單等號 =，在 C++ 比較中要轉成 ==
+            if self.checkToken(TokenType.EQ):
+                self.emitter.emit("==")
+                self.nextToken()
+            else:
+                self.emitter.emit(self.curToken.text)
+                self.nextToken()
             self.expression()
 
     def isComparisonOperator(self):
         return self.checkToken(TokenType.GT) or self.checkToken(TokenType.GTE) or \
                self.checkToken(TokenType.LT) or self.checkToken(TokenType.LTE) or \
-               self.checkToken(TokenType.EQEQ) or self.checkToken(TokenType.NOTEQ)
+               self.checkToken(TokenType.EQEQ) or self.checkToken(TokenType.NOTEQ) or \
+               self.checkToken(TokenType.EQ)  # <--- [新增] 讓單等號也能當比較運算符
 
     def expression(self):
         self.term()
@@ -218,22 +291,15 @@ class Parser:
         self.unary()
         while self.checkToken(TokenType.ASTERISK) or self.checkToken(TokenType.SLASH) or \
               self.checkToken(TokenType.MOD) or self.checkToken(TokenType.DOUBLESLASH):
-            
             if self.checkToken(TokenType.MOD):
                 self.nextToken()
-                # 使用 auto 後，我們可以大膽地讓運算式保持原樣
-                # 但為了保險，如果是浮點數取餘數，C++ 還是會報錯
-                # 這裡最簡單的做法還是強制轉型，或者我們相信使用者會用整數
                 self.emitter.emit(" % (int) ") 
-            
             elif self.checkToken(TokenType.DOUBLESLASH):
                 self.nextToken()
                 self.emitter.emit(" / ")
-            
             else:
                 self.emitter.emit(self.curToken.text)
                 self.nextToken()
-            
             self.unary()
 
     def unary(self):
@@ -250,7 +316,22 @@ class Parser:
         elif self.checkToken(TokenType.IDENTIFIER):
             name = self.curToken.text
             self.match(TokenType.IDENTIFIER)
-            if self.checkToken(TokenType.LBRACKET):
+            
+            # [新增] 函式呼叫 fib(n) 作為運算式的一部分
+            if self.checkToken(TokenType.LPAREN):
+                self.match(TokenType.LPAREN)
+                self.emitter.emit(f"{name}(")
+                # 處理參數
+                if not self.checkToken(TokenType.RPAREN):
+                    self.expression()
+                    while self.checkToken(TokenType.COMMA):
+                        self.emitter.emit(", ")
+                        self.match(TokenType.COMMA)
+                        self.expression()
+                self.match(TokenType.RPAREN)
+                self.emitter.emit(")")
+            
+            elif self.checkToken(TokenType.LBRACKET):
                 self.match(TokenType.LBRACKET)
                 self.emitter.emit(f"{name}[(int)(")
                 self.expression()

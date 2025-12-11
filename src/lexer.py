@@ -40,36 +40,52 @@ class Lexer:
         elif self.curChar == '\0':
             token = Token('', TokenType.EOF)
 
-        # --- 1. 處理註解 (只支援 #) ---
+        # --- 1. 處理註解 ---
         elif self.curChar == '#':
-            self.nextChar() # 跳過 #
+            self.nextChar()
             startPos = self.curPos
+            # 這裡你原本寫對了，有檢查 \0
             while self.curChar != '\n' and self.curChar != '\0':
                 self.nextChar()
             text = self.source[startPos : self.curPos]
-            # 轉成 C 語言註解格式
             token = Token(f"//{text}", TokenType.COMMENT)
 
-        # --- 2. 處理字串 ---
+        # --- 2. 處理字串 (修正無窮迴圈) ---
         elif self.curChar == '"':
             self.nextChar()
             startPos = self.curPos
-            while self.curChar != '"':
-                if self.curChar in ['\r', '\n', '\\', '%']: pass
+            
+            # [修正點] 必須檢查 self.curChar != '\0'
+            while self.curChar != '"' and self.curChar != '\0':
+                if self.curChar == '\n':
+                    self.abort("String literal cannot contain newline.")
                 self.nextChar()
+            
+            # 如果是因為檔案結束而跳出迴圈，代表少寫了引號
+            if self.curChar == '\0':
+                self.abort("Unterminated string literal (missing closing \")")
+
             tokenText = self.source[startPos : self.curPos]
             token = Token(tokenText, TokenType.STRING)
-            self.nextChar()
+            self.nextChar() # 跳過結尾的 "
 
-        # --- 3. 處理變數 (反引號) ---
+        # --- 3. 處理變數 (修正無窮迴圈) ---
         elif self.curChar == '`':
             self.nextChar()
             startPos = self.curPos
-            while self.curChar != '`':
+            
+            # [修正點] 必須檢查 self.curChar != '\0'
+            while self.curChar != '`' and self.curChar != '\0':
+                if self.curChar == '\n':
+                    self.abort("Variable identifier cannot contain newline.")
                 self.nextChar()
+            
+            if self.curChar == '\0':
+                self.abort("Unterminated variable identifier (missing closing `)")
+
             tokenText = self.source[startPos : self.curPos]
             token = Token(tokenText, TokenType.IDENTIFIER)
-            self.nextChar()
+            self.nextChar() # 跳過結尾的 `
 
         # --- 4. 處理數字 ---
         elif self.curChar.isdigit():
@@ -98,15 +114,13 @@ class Lexer:
                 token = Token(tokenText, keyword)
             self.nextChar()
 
-        # --- 6. 處理運算符號 (包含 // 與 /) ---
+        # --- 6. 處理運算符號 ---
         elif self.curChar == '/':
             if self.peek() == '/':
-                # 這是運算符 // (整數除法)，不再是註解！
                 self.nextChar()
                 self.nextChar()
                 token = Token('//', TokenType.DOUBLESLASH)
             else:
-                # 這是運算符 /
                 token = Token('/', TokenType.SLASH)
                 self.nextChar()
                 
