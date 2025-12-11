@@ -1,0 +1,22 @@
+# file_test.itz: File I/O Testing
+
+DEF filename = "test.txt"
+DEF content = ""
+
+ECHO "--- 1. Writing File ---"
+# 寫入初始內容
+FWRITE filename, "Hello File System!\n"
+ECHO "Created `filename` with initial content."
+
+ECHO "--- 2. Appending File ---"
+# 追加內容
+FAPPEND filename, "This is appended text.\n"
+ECHO "Appended text to `filename`."
+
+ECHO "--- 3. Reading File ---"
+# 定義一個字串變數來接收內容
+DEF fileData = "empty"
+FREAD filename, fileData
+
+ECHO "File Content:"
+ECHO "`fileData`"

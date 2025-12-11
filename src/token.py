@@ -54,6 +54,11 @@ class TokenType(Enum):
     LTE = 'LTE'
     GT = 'GT'
     GTE = 'GTE'
+    
+    # 檔案
+    FWRITE = 'FWRITE'
+    FREAD = 'FREAD'
+    FAPPEND = 'FAPPEND'
 
 class Token:
     def __init__(self, token_text, token_kind):

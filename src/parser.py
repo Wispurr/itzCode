@@ -27,6 +27,7 @@ class Parser:
     def program(self):
         # 1. 寫入 Headers
         self.emitter.headerLine("#include <iostream>")
+        self.emitter.headerLine("#include <fstream>")
         self.emitter.headerLine("#include <string>")
         self.emitter.headerLine("#include <vector>")
         self.emitter.headerLine("#include <cstdlib>")
@@ -43,7 +44,6 @@ class Parser:
             self.nextToken()
 
         while not self.checkToken(TokenType.EOF):
-            # [關鍵邏輯] 判斷是函式定義還是普通語句
             if self.checkToken(TokenType.FUNC):
                 self.emitter.setCaptureMode("functions") # 切換到函式緩衝區
                 self.func_def()
@@ -54,7 +54,6 @@ class Parser:
         self.emitter.main += "    return 0;\n"
         self.emitter.main += "}\n"
 
-    # [新增] 函式定義處理
     def func_def(self):
         self.match(TokenType.FUNC)
         func_name = self.curToken.text
@@ -253,6 +252,81 @@ class Parser:
                 self.emitter.emitLine(");")
             else:
                  sys.exit(f"[Error] Unexpected identifier usage: {name}")
+                 
+        elif self.checkToken(TokenType.FWRITE):
+            self.match(TokenType.FWRITE)
+            
+            # 1. 解析檔名 (可以是字串或變數)
+            fileName = ""
+            if self.checkToken(TokenType.STRING):
+                fileName = f'"{self.curToken.text}"'
+                self.nextToken()
+            else:
+                fileName = self.curToken.text
+                self.match(TokenType.IDENTIFIER)
+            
+            self.match(TokenType.COMMA)
+            
+            # 2. 生成 C++ 寫入區塊
+            # 使用 { } 限制作用域，避免多個 FWRITE 導致變數 f 重複定義
+            self.emitter.emitLine("    {")
+            self.emitter.emitLine(f'        ofstream f({fileName});')
+            self.emitter.emit("        f << ")
+            self.expression() # 寫入內容 (支援變數或字串)
+            self.emitter.emitLine(";")
+            self.emitter.emitLine("        f.close();")
+            self.emitter.emitLine("    }")
+
+        # 語法: FAPPEND filename, content
+        elif self.checkToken(TokenType.FAPPEND):
+            self.match(TokenType.FAPPEND)
+            
+            fileName = ""
+            if self.checkToken(TokenType.STRING):
+                fileName = f'"{self.curToken.text}"'
+                self.nextToken()
+            else:
+                fileName = self.curToken.text
+                self.match(TokenType.IDENTIFIER)
+            
+            self.match(TokenType.COMMA)
+            
+            self.emitter.emitLine("    {")
+            self.emitter.emitLine(f'        ofstream f({fileName}, ios::app);') # ios::app 是追加模式
+            self.emitter.emit("        f << ")
+            self.expression()
+            self.emitter.emitLine(";")
+            self.emitter.emitLine("        f.close();")
+            self.emitter.emitLine("    }")
+
+        # 語法: FREAD filename, varName
+        elif self.checkToken(TokenType.FREAD):
+            self.match(TokenType.FREAD)
+            
+            fileName = ""
+            if self.checkToken(TokenType.STRING):
+                fileName = f'"{self.curToken.text}"'
+                self.nextToken()
+            else:
+                fileName = self.curToken.text
+                self.match(TokenType.IDENTIFIER)
+            
+            self.match(TokenType.COMMA)
+            
+            # 取得要存入的變數名稱
+            varName = self.curToken.text
+            self.match(TokenType.IDENTIFIER)
+            
+            # 生成 C++ 讀取邏輯 (一次讀取整個檔案)
+            self.emitter.emitLine("    {")
+            self.emitter.emitLine(f'        ifstream f({fileName});')
+            self.emitter.emitLine("        if(f) {")
+            self.emitter.emitLine(f'            {varName}.assign((istreambuf_iterator<char>(f)), (istreambuf_iterator<char>()));')
+            self.emitter.emitLine("        }")
+            self.emitter.emitLine("        f.close();")
+            self.emitter.emitLine("    }")
+            
+
         else:
             sys.exit(f"[Parsing Error] Unexpected token at start of statement: {self.curToken.kind} ({self.curToken.text})")
 
@@ -317,11 +391,10 @@ class Parser:
             name = self.curToken.text
             self.match(TokenType.IDENTIFIER)
             
-            # [新增] 函式呼叫 fib(n) 作為運算式的一部分
+            # 函式呼叫 fib(n)
             if self.checkToken(TokenType.LPAREN):
                 self.match(TokenType.LPAREN)
                 self.emitter.emit(f"{name}(")
-                # 處理參數
                 if not self.checkToken(TokenType.RPAREN):
                     self.expression()
                     while self.checkToken(TokenType.COMMA):
@@ -331,6 +404,7 @@ class Parser:
                 self.match(TokenType.RPAREN)
                 self.emitter.emit(")")
             
+            # 陣列存取 arr[i]
             elif self.checkToken(TokenType.LBRACKET):
                 self.match(TokenType.LBRACKET)
                 self.emitter.emit(f"{name}[(int)(")
@@ -339,6 +413,12 @@ class Parser:
                 self.match(TokenType.RBRACKET)
             else:
                 self.emitter.emit(name)
+
+        # [新增] 支援字串表達式
+        elif self.checkToken(TokenType.STRING):
+            # 因為 Lexer 已經去掉了前後引號，我們產生 C++ 程式碼時要補回去
+            self.emitter.emit(f'"{self.curToken.text}"') 
+            self.nextToken()
         
         elif self.checkToken(TokenType.RAND):
             self.match(TokenType.RAND)

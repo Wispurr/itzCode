@@ -8,3 +8,6 @@ __pycache__/
 # results
 results/
 output.*
+
+# test files
+test.txt
