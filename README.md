@@ -93,11 +93,11 @@ A temperorary name for 1141 YZU CS321B Final Proj.
     -   [ ] queue
     -   [ ] link-list
 
--   [ ] File R/W
+-   [x] File I/O
 
-    -   [ ] Read File
-    -   [ ] Write File
-    -   [ ] Append File
+    -   [x] Read File
+    -   [x] Write File
+    -   [x] Append File
 
 ## FAQ:
 
