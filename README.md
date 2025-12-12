@@ -86,7 +86,7 @@ A temperorary name for 1141 YZU CS321B Final Proj.
     -   [ ] struct
     -   [ ] class
 
--   [ ] STL Container
+-   [ ] STL Containers
 
     -   [ ] vectors
     -   [ ] stack
