@@ -105,9 +105,9 @@ The following tree illustrates the organization of the project and the purpose o
 
 ````text
 .
-├── demo.py                  # 🚀 Main Entry Point (Driver Script)
+├── demo.py                  # Main Entry Point (Driver Script)
 ├── build.bat                # (Optional) Windows One-Click Build Script
-├── examples/                # 📂 Source Code Examples (*.itz)
+├── examples/                # Source Code Examples (*.itz)
 │   ├── algorithm.itz        # Algorithm implementation (Bubble Sort, Min/Max)
 │   ├── comments.itz         # Comment handling tests
 │   ├── expressions.itz      # Math operations & type inference tests
@@ -118,12 +118,12 @@ The following tree illustrates the organization of the project and the purpose o
 │   ├── logic.itz            # Logic gates & comparison tests
 │   ├── loop.itz             # Loops (For/While) tests
 │   └── random.itz           # Random number generation tests
-├── src/                     # 🧠 Compiler Core Modules
+├── src/                     # Compiler Core Modules
 │   ├── token.py             # Definition of Language Tokens (Enums)
 │   ├── lexer.py             # Lexical Analyzer (Raw Text -> Tokens)
 │   ├── parser.py            # Syntax Parser (Tokens -> C++ Logic)
 │   └── emitter.py           # Code Generator (Manages C++ output buffers)
-└── results/                 # ⚙️ Build Artifacts (Generated .cpp & .exe)
+└── results/                 # Build Artifacts (Generated .cpp & .exe)
 
 ## FAQ:
 
