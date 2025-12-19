@@ -103,7 +103,7 @@ A temperorary name for 1141 YZU CS321B Final Proj.
 
 The following tree illustrates the organization of the project and the purpose of each file.
 
-````text
+```text
 .
 ├── demo.py                  # Main Entry Point (Driver Script)
 ├── build.bat                # (Optional) Windows One-Click Build Script
@@ -124,6 +124,7 @@ The following tree illustrates the organization of the project and the purpose o
 │   ├── parser.py            # Syntax Parser (Tokens -> C++ Logic)
 │   └── emitter.py           # Code Generator (Manages C++ output buffers)
 └── results/                 # Build Artifacts (Generated .cpp & .exe)
+```
 
 ## FAQ:
 
@@ -134,4 +135,3 @@ The following tree illustrates the organization of the project and the purpose o
 > ```powershell
 > python3 <rest of the cli commands>
 > ```
-````
